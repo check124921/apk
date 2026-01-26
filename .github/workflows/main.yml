@@ -1,26 +1,27 @@
-name: Build & Publish Release APK
-
+name: Build Android APK
 on:
-  push:
-    tags:
-      - '*'
-
+ push:
+   branches: [ main ]
+ pull_request:
+   branches: [ main ]
 jobs:
-  Gradle:
-    runs-on: ubuntu-latest
-    steps:
-    - name: checkout code
-      uses: actions/checkout@v2
-    - name: setup jdk
-      uses: actions/setup-java@v1
-      with:
-        java-version: 11
-    - name: Make Gradle executable
-      run: chmod +x ./gradlew
-    - name: Build Release APK
-      run: ./gradlew assembleRelease
-    - name: Releasing using Hub
-      uses: sangatdesai/release-apk@main
-      env:
-       GITHUB_TOKEN: ${{ secrets.TOKEN }}
-       APP_FOLDER: app
+ build:
+   name: Build APK
+   runs-on: ubuntu-latest
+   steps:
+     - name: Checkout repository
+       uses: actions/checkout@v4
+     - name: Set up JDK
+       uses: actions/setup-java@v3
+       with:
+         distribution: 'temurin'
+         java-version: '17'
+     - name: Setup Gradle cache
+       uses: gradle/gradle-build-action@v3
+     - name: Build debug APK
+       run: ./gradlew assembleDebug
+     - name: Upload APK
+       uses: actions/upload-artifact@v3
+       with:
+         name: Debug-APK
+         path: app/build/outputs/apk/debug/app-debug.apk

@@ -1,65 +1,39 @@
-name: Build Android APK
+name: Build and Release
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:
+    tags:
+      - 'v*.*.*'  # 匹配类似 v1.0.0 的标签
 
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
-    
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-    
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y git wget unzip openjdk-11-jdk python3-pip
-    
-    - name: Install Python packages
-      run: |
-        pip install kivy buildozer
-    
-    - name: Setup Android SDK
-      run: |
-        wget -q https://dl.google.com/android/repository/commandlinetools-linux-8512546_latest.zip -O cmdline-tools.zip
-        mkdir -p android-sdk
-        unzip -q cmdline-tools.zip -d android-sdk
-        mv android-sdk/cmdline-tools android-sdk/latest
-        yes | android-sdk/latest/bin/sdkmanager --licenses
-        android-sdk/latest/bin/sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0"
-    
-    - name: Setup Android NDK
-      run: |
-        wget -q https://dl.google.com/android/repository/android-ndk-r23b-linux.zip -O ndk.zip
-        unzip -q ndk.zip
-        mv android-ndk-r23b android-ndk
-    
-    - name: Create buildozer config
-      run: |
-        buildozer init
-        echo "" >> buildozer.spec
-        echo "[buildozer]" >> buildozer.spec
-        echo "log_level = 2" >> buildozer.spec
-        echo "" >> buildozer.spec
-        echo "[android]" >> buildozer.spec
-        echo "ndk_path = $(pwd)/android-ndk" >> buildozer.spec
-        echo "sdk_path = $(pwd)/android-sdk" >> buildozer.spec
-    
-    - name: Build APK
-      run: |
-        buildozer android debug
-    
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: android-apk
-        path: bin/*.apk
+      # 1. 拉取代码
+      - name: Checkout code
+        uses: actions/checkout@v4[citation:1][citation:10]
+
+      # 2. 设置 Java 环境
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4[citation:1][citation:10]
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      # 3. 还原签名密钥文件（关键安全步骤）
+      - name: Decode signing key
+        run: echo "${{ secrets.SIGNING_KEY }}" | base64 -d > app/keystore.jks[citation:10]
+        # 说明：签名密钥需预先通过Base64编码，存储在仓库的Secrets中，名为SIGNING_KEY[citation:4]
+
+      # 4. 授予 gradlew 执行权限并构建发布版APK
+      - name: Build Release APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleRelease[citation:10]
+
+      # 5. 自动创建 GitHub Release 并上传APK
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1[citation:10]
+        with:
+          files: app/build/outputs/apk/release/*.apk
+          generate_release_notes: true[citation:10]

@@ -43,7 +43,7 @@ jobs:
           gradle --version
         fi
 
-     - name: Build APK
+    - name: Build APK
       run: |
         if [ -f "gradlew" ]; then
           ./gradlew assembleDebug --no-daemon

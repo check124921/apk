@@ -14,23 +14,35 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    - name: Debug - Show files
+      run: |
+        pwd
+        ls -la
+        find . -name "gradlew" -type f
+
     - name: Set up JDK 17
       uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
 
-    - name: Make gradlew executable
-      run: chmod +x gradlew
+    - name: Set executable permissions (force)
+      run: |
+        chmod -R +x . || true
+        ls -la gradlew || echo "gradlew not found"
 
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4
-
-    - name: Build APK
-      run: ./gradlew assembleDebug --no-daemon
+    - name: Build with Gradle
+      run: |
+        if [ -f "gradlew" ]; then
+          ./gradlew assembleDebug --no-daemon --info
+        else
+          echo "No gradlew found, checking if this is a valid Android project"
+          exit 1
+        fi
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
+      if: success()
       with:
         name: android-apk
         path: app/build/outputs/apk/debug/

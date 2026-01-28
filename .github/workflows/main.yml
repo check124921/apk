@@ -49,13 +49,28 @@ jobs:
           ./gradlew assembleDebug --no-daemon
         fi
 
-    - name: Find APK files
+    - name: Find all files after build
       run: |
-        echo "Looking for APK files..."
+        echo "Looking for APK files after build..."
         find . -name "*.apk" -type f
+        echo "Looking at build directories..."
+        find . -name "build" -type d
 
-    - name: Upload APK
+    - name: Upload APK (with conditional logic)
+      run: |
+        if find . -name "*.apk" -type f | grep -q .; then
+          echo "Found APK files, creating artifact directory..."
+          mkdir -p apk_artifacts
+          find . -name "*.apk" -type f -exec cp {} apk_artifacts/ \;
+          echo "APK files copied to artifact directory"
+        else
+          echo "No APK files found, creating dummy file"
+          mkdir -p apk_artifacts
+          echo "No APK generated" > apk_artifacts/no_apk_found.txt
+        fi
+
+    - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
         name: android-apk
-        path: "**/*.apk"
+        path: apk_artifacts/

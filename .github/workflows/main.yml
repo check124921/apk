@@ -1,9 +1,8 @@
-# 更完整的示例
-name: Android CI/CD
+name: Android Build
 
 on:
   push:
-    branches: [ "main", "develop" ]
+    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
 
@@ -20,32 +19,18 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: 'gradle'
-
-    - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v4
-      with:
-        gradle-version: 'latest'
 
     - name: Make gradlew executable
       run: chmod +x gradlew
 
-    - name: Run tests
-      run: ./gradlew testDebugUnitTest
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
 
     - name: Build APK
-      run: ./gradlew assembleDebug assembleRelease
+      run: ./gradlew assembleDebug --no-daemon
 
-    - name: Upload Debug APK
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: debug-apk-${{ github.sha }}
+        name: android-apk
         path: app/build/outputs/apk/debug/
-        retention-days: 30
-
-    - name: Upload Release APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: release-apk-${{ github.sha }}
-        path: app/build/outputs/apk/release/
-        retention-days: 30

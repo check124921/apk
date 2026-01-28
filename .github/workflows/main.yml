@@ -43,7 +43,7 @@ jobs:
           gradle --version
         fi
 
-    - name: Build APK
+     - name: Build APK
       run: |
         if [ -f "gradlew" ]; then
           ./gradlew assembleDebug --no-daemon
@@ -58,4 +58,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: android-apk
-        path: |
+        path: "**/*.apk"

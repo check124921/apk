@@ -54,3 +54,9 @@ jobs:
       with:
         name: android-apk
         path: app/build/outputs/apk/debug/app-debug.apk
+        
+    - name: Download Artifact
+      uses: actions/download-artifact@v4
+      with:
+          name: apk_test
+          path: /
